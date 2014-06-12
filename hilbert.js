@@ -14,12 +14,12 @@ var d2xyz = require('hilbert3d').d2xyz;
 var blocks = argv.blocks || 8;
 var acceptableBlocks = { 1: 1, 8: 1, 64: 1, 512: 1, 4096: 1 };
 if (!(blocks in acceptableBlocks)) {
-  throw new Exception("Invalid block size: " + blocks + ". Must be one of {1,8,64,512,4096}.");
+  throw new Error("Invalid block size: " + blocks + ". Must be one of {1,8,64,512,4096}.");
 }
 
-var projectionType = argv.projectionType || 'scaleXYZ';
-if (!projectionType in { 'scaledD': 1, 'scaledXYZ': 1 }) {
-  throw new Exception("Invalid projection type: " + projectionType + ". Must be one of {scaledD, scaledXYZ}.");
+var projectionType = argv.projection || 'scaleXYZ';
+if (!projectionType in { 'scaleD': 1, 'scaleXYZ': 1 }) {
+  throw new Error("Invalid projection type: " + projectionType + ". Must be one of {scaleD, scaleXYZ}.");
 }
 
 var blockSize = canvasSize / blocks;
@@ -54,7 +54,7 @@ function computeColorForBlock(x, y) {
     color = xyz.mult(scalingFactor3d);
     log("block (%d,%d): d: %d, xyz: [%s], color: [%s]", x, y, d, xyz.arr.join(','), color.arr.join(','));
   } else {
-    throw new Exception('Unrecognized projection type: ' + projectionType);
+    throw new Error('Unrecognized projection type: ' + projectionType);
   }
 
   return color.arr.concat([0]);
