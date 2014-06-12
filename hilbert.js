@@ -7,6 +7,8 @@ var argv = require('minimist')(process.argv.slice(2));
 
 var canvasSize = argv.size || 512;
 
+var debug = !!argv.debug;
+
 var xy2d = require('hilbert2d').xy2d;
 
 var d2xyz = require('hilbert3d').d2xyz;
