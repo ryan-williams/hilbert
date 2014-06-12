@@ -17,9 +17,9 @@ Point = function(x, y, z) {
     x = x[0];
   }
 
-  this.x = x || 0;
-  this.y = y || 0;
-  this.z = z || 0;
+  this.x = Math.round(x) || 0;
+  this.y = Math.round(y) || 0;
+  this.z = Math.round(z) || 0;
 
   this.arr = [this.x, this.y, this.z];
 
