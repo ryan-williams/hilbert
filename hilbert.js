@@ -11,10 +11,9 @@ var canvasSize = argv.size || 512;
 var debug = !!argv.debug;
 
 var xy2d = require('hilbert').xy2d;
-
 var d2xyz = require('hilbert').d2xyz;
 
-var pngConstructionMethod = argv.method || "blocks";
+var pngConstructionMethod = argv.method || "pixels";
 if (!(pngConstructionMethod in { "blocks": 1, "pixels": 1 })) {
   throw new Error("Invalid method: " + pngConstructionMethod + ". Must be one of {blocks,pixels}.");
 }
