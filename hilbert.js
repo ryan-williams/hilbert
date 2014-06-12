@@ -3,6 +3,7 @@ var fs = require('fs');
 var Png = require('../node-png/build/Release/png').Png;
 var FixedPngStack = require('../node-png/build/Release/png').FixedPngStack;
 var Buffer = require('buffer').Buffer;
+var moment = require('moment');
 
 var argv = require('minimist')(process.argv.slice(2));
 
@@ -77,7 +78,7 @@ function getPngByBlocks() {
   for (var blockX = 0; blockX < blocks; blockX++) {
     for (var blockY = 0; blockY < blocks; blockY++) {
       if (num % 100000 == 0) {
-        console.log("\t%d/%d..",num, blocks*blocks);
+        console.log("%s:\t%d/%d..", moment().format('HH:mm:ss'), num, blocks*blocks);
       }
 
       var color = getColorForBlock(blockX, blockY);
@@ -103,7 +104,7 @@ function getPngByPixels() {
   for (var y = 0; y < canvasSize; ++y) {
     for (var x = 0; x < canvasSize; ++x) {
       if (num % 100000 == 0) {
-        console.log("\t%d/%d..",num, canvasSize*canvasSize);
+        console.log("%s:\t%d/%d..", moment().format('HH:mm:ss'), num, canvasSize*canvasSize);
       }
 
       var blockX = Math.floor(x / blockSize);
