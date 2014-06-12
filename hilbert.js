@@ -65,7 +65,7 @@ function computeColorForBlock(x, y) {
     throw new Error('Unrecognized projection type: ' + projectionType);
   }
 
-  return color.arr;//.concat([0]);
+  return color.arr;
 }
 
 var blockColorCache = [];
@@ -95,7 +95,7 @@ function getPngByBlocks() {
       for (var i = 0; i < blockSize * blockSize; i++) {
         data += String.fromCharCode.apply(String, color);
       }
-      var buffer = new Buffer(blockSize*blockSize*4);
+      var buffer = new Buffer(blockSize*blockSize*3);
       buffer.write(data, 'binary');
       png.push(buffer, blockX * blockSize, blockY * blockSize, blockSize, blockSize);
 
@@ -106,8 +106,7 @@ function getPngByBlocks() {
 }
 
 function getPngByPixels() {
-  var data = '';
-  var buffer = new Buffer(canvasSize*canvasSize*4);
+  var buffer = new Buffer(canvasSize*canvasSize*3);
   var num = 0;
   for (var y = 0; y < canvasSize; ++y) {
     for (var x = 0; x < canvasSize; ++x) {
@@ -120,12 +119,10 @@ function getPngByPixels() {
 
       var color = getColorForBlock(blockX, blockY);
 
-      data += String.fromCharCode.apply(String, color);
+      buffer.write(String.fromCharCode.apply(String, color), 3 * (y*canvasSize + x), 3, 'binary');
       num++;
     }
   }
-
-  buffer.write(data, 'binary');
 
   var png = new Png(buffer, canvasSize, canvasSize, 'rgb');
   return png.encodeSync();
