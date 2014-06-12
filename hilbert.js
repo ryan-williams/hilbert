@@ -1,6 +1,7 @@
 
 var fs = require('fs');
 var Png = require('../node-png/build/Release/png').Png;
+var FixedPngStack = require('../node-png/build/Release/png').FixedPngStack;
 var Buffer = require('buffer').Buffer;
 
 var argv = require('minimist')(process.argv.slice(2));
@@ -12,6 +13,11 @@ var debug = !!argv.debug;
 var xy2d = require('hilbert2d').xy2d;
 
 var d2xyz = require('hilbert3d').d2xyz;
+
+var pngConstructionMethod = argv.method || "blocks";
+if (!(pngConstructionMethod in { "blocks": 1, "pixels": 1 })) {
+  throw new Error("Invalid method: " + pngConstructionMethod + ". Must be one of {blocks,pixels}.");
+}
 
 var blocks = argv.blocks || 8;
 var acceptableBlocks = { 1: 1, 8: 1, 64: 1, 512: 1, 4096: 1 };
@@ -26,15 +32,9 @@ if (!projectionType in { 'scaleD': 1, 'scaleXYZ': 1 }) {
 
 var blockSize = canvasSize / blocks;
 
-var data = '';
-var buffer = new Buffer(canvasSize*canvasSize*4);
-
 var scalingFactor = 256*256*256/blocks/blocks;
 var scalingFactor3d = 255 / (Math.round(Math.pow(blocks, 2/3)) - 1);
 
-var num = 0;
-
-var debug = true;
 function log() {
   if (debug) {
     console.log.apply(console, arguments);
@@ -57,7 +57,7 @@ function computeColorForBlock(x, y) {
     throw new Error('Unrecognized projection type: ' + projectionType);
   }
 
-  return color.arr.concat([0]);
+  return color.arr;//.concat([0]);
 }
 
 var blockColorCache = [];
@@ -72,29 +72,64 @@ function getColorForBlock(x, y) {
   return blockColorCache[x][y];
 }
 
-for (var y = 0; y < canvasSize; ++y) {
-  for (var x = 0; x < canvasSize; ++x) {
-    if (num % 100000 == 0) {
-      console.log("\t%d/%d..",num, canvasSize*canvasSize);
+function getPngByBlocks() {
+  var png = new FixedPngStack(canvasSize, canvasSize, 'rgb');
+  var num = 0;
+  for (var blockX = 0; blockX < blocks; blockX++) {
+    for (var blockY = 0; blockY < blocks; blockY++) {
+      if (num % 100000 == 0) {
+        console.log("\t%d/%d..",num, blocks*blocks);
+      }
+
+      var color = getColorForBlock(blockX, blockY);
+
+      var data = '';
+      for (var i = 0; i < blockSize * blockSize; i++) {
+        data += String.fromCharCode.apply(String, color);
+      }
+      var buffer = new Buffer(blockSize*blockSize*4);
+      buffer.write(data, 'binary');
+      png.push(buffer, blockX * blockSize, blockY * blockSize, blockSize, blockSize);
+
+      num++;
     }
-
-    var blockX = Math.floor(x / blockSize);
-    var blockY = Math.floor(y / blockSize);
-
-    var color = getColorForBlock(blockX, blockY);
-
-    data += String.fromCharCode.apply(String, color);
-    num++;
   }
+  return png.encodeSync();
 }
 
-console.log(typeof data);
-console.log("len: %d", data.length);
-console.log("scale: " + scalingFactor);
-console.log("%d, %d", data.length, data.length / 4);
-buffer.write(data, 'binary');
+function getPngByPixels() {
+  var data = '';
+  var buffer = new Buffer(canvasSize*canvasSize*4);
+  var num = 0;
+  for (var y = 0; y < canvasSize; ++y) {
+    for (var x = 0; x < canvasSize; ++x) {
+      if (num % 100000 == 0) {
+        console.log("\t%d/%d..",num, canvasSize*canvasSize);
+      }
 
-var p = new Png(buffer, canvasSize, canvasSize, 'rgba');
-var png_image = p.encodeSync();
+      var blockX = Math.floor(x / blockSize);
+      var blockY = Math.floor(y / blockSize);
+
+      var color = getColorForBlock(blockX, blockY);
+
+      data += String.fromCharCode.apply(String, color);
+      num++;
+    }
+  }
+
+  buffer.write(data, 'binary');
+
+  var png = new Png(buffer, canvasSize, canvasSize, 'rgb');
+  return png.encodeSync();
+}
+
+var png = null;
+if (pngConstructionMethod == "blocks") {
+  png = getPngByBlocks();
+} else {
+  png = getPngByPixels();
+}
+
 var filename = 'hilbert-' + blocks + '-' + canvasSize + 'x' + canvasSize + '-' + projectionType + '.png';
-fs.writeFileSync(filename, png_image.toString('binary'), 'binary');
+console.log("Writing to: %s", filename);
+fs.writeFileSync(filename, png.toString('binary'), 'binary');
