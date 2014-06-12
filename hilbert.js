@@ -30,6 +30,14 @@ if (!projectionType in { 'scaleD': 1, 'scaleXYZ': 1 }) {
   throw new Error("Invalid projection type: " + projectionType + ". Must be one of {scaleD, scaleXYZ}.");
 }
 
+var outfileRoot = argv.outbase || "hilbert";
+var outfileDir = argv.outdir || ".";
+if (outfileDir[outfileDir.length - 1] != '/') {
+  outfileDir += '/';
+}
+
+var filename = outfileDir + outfileRoot + '-' + blocks + '-' + canvasSize + 'x' + canvasSize + '-' + projectionType + '.png';
+
 var blockSize = canvasSize / blocks;
 
 var scalingFactor = 256*256*256/blocks/blocks;
@@ -130,6 +138,5 @@ if (pngConstructionMethod == "blocks") {
   png = getPngByPixels();
 }
 
-var filename = 'hilbert-' + blocks + '-' + canvasSize + 'x' + canvasSize + '-' + projectionType + '.png';
 console.log("Writing to: %s", filename);
 fs.writeFileSync(filename, png.toString('binary'), 'binary');
