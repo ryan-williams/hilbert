@@ -10,9 +10,9 @@ var canvasSize = argv.size || 512;
 
 var debug = !!argv.debug;
 
-var xy2d = require('hilbert2d').xy2d;
+var xy2d = require('hilbert').xy2d;
 
-var d2xyz = require('hilbert3d').d2xyz;
+var d2xyz = require('hilbert').d2xyz;
 
 var pngConstructionMethod = argv.method || "blocks";
 if (!(pngConstructionMethod in { "blocks": 1, "pixels": 1 })) {
