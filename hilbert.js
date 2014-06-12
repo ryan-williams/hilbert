@@ -28,9 +28,7 @@ var data = '';
 var buffer = new Buffer(canvasSize*canvasSize*4);
 
 var scalingFactor = 256*256*256/blocks/blocks;
-
 var scalingFactor3d = 255 / (Math.round(Math.pow(blocks, 2/3)) - 1);
-console.log("3d scaling: %d", scalingFactor3d);
 
 var num = 0;
 
@@ -46,9 +44,9 @@ function computeColorForBlock(x, y) {
 
   var color = null;
   if (projectionType == 'scaleD') {
-    var scaledD = d * scalingFactor;
-    color = d2xyz(scaledD);
-    log("block (%d,%d): d: %d, scaled: %d, color: [%s]", x, y, d, scaledD, color.arr.join(','));
+    var scaleD = d * scalingFactor;
+    color = d2xyz(scaleD);
+    log("block (%d,%d): d: %d, scaled: %d, color: [%s]", x, y, d, scaleD, color.arr.join(','));
   } else if (projectionType == 'scaleXYZ') {
     var xyz = d2xyz(d);
     color = xyz.mult(scalingFactor3d);
