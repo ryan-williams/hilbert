@@ -25,10 +25,18 @@ if (!(blocks in acceptableBlocks)) {
   throw new Error("Invalid block size: " + blocks + ". Must be one of {1,8,64,512,4096}.");
 }
 
+var projectionNameMap = {
+  xyz: 'scaleXYZ',
+  scaleXYZ: 'scaleXYZ',
+  d: 'scaleD',
+  scaleD: 'scaleD'
+};
+
 var projectionType = argv.projection || 'scaleXYZ';
-if (!projectionType in { 'scaleD': 1, 'scaleXYZ': 1 }) {
+if (!projectionType in projectionNameMap) {
   throw new Error("Invalid projection type: " + projectionType + ". Must be one of {scaleD, scaleXYZ}.");
 }
+projectionType = projectionNameMap[projectionType];
 
 var outfileRoot = argv.outbase || "hilbert";
 var outfileDir = argv.outdir || ".";
