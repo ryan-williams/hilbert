@@ -12,6 +12,8 @@ var canvasSize = argv.size || 512;
 var debug = !!argv.debug;
 var printProgressIncrement = argv.printEvery || 10000;
 
+var dryRun = !!argv['dry-run'];
+
 var xy2d = require('hilbert').xy2d;
 var d2xyz = require('hilbert').d2xyz;
 
@@ -126,10 +128,11 @@ function getPngByBlocks() {
       for (var i = 0; i < blockSize * blockSize; i++) {
         data += String.fromCharCode.apply(String, color);
       }
-      var buffer = new Buffer(blockSize*blockSize*3);
-      buffer.write(data, 'binary');
-      png.push(buffer, blockX * blockSize, blockY * blockSize, blockSize, blockSize);
-
+      if (!dryRun) {
+        var buffer = new Buffer(blockSize * blockSize * 3);
+        buffer.write(data, 'binary');
+        png.push(buffer, blockX * blockSize, blockY * blockSize, blockSize, blockSize);
+      }
       num++;
     }
   }
@@ -149,7 +152,9 @@ function getPngByPixels() {
 
       var color = getColorForBlock(blockX, blockY);
 
-      buffer.write(String.fromCharCode.apply(String, color), 3 * (y*canvasSize + x), 3, 'binary');
+      if (!dryRun) {
+        buffer.write(String.fromCharCode.apply(String, color), 3 * (y * canvasSize + x), 3, 'binary');
+      }
       num++;
     }
   }
@@ -165,5 +170,10 @@ if (pngConstructionMethod == "blocks") {
   png = getPngByPixels();
 }
 
-console.log("Writing to: %s", filename);
-fs.writeFileSync(filename, png.toString('binary'), 'binary');
+if (!dryRun) {
+  console.log("Writing to: %s", filename);
+  fs.writeFileSync(filename, png.toString('binary'), 'binary');
+} else {
+  console.log("dry run, not writing");
+}
+
