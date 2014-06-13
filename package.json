@@ -1,0 +1,27 @@
+{
+  "name": "hilbert-image-map",
+  "version": "1.0.0",
+  "main": "./hilbert-image-map",
+  "description": "A module that generates color-picker images based on Hilbert curves.",
+  "keywords": [
+    "hilbert",
+    "curve",
+    "space-filling",
+    "fractal",
+    "color-picker",
+    "palette",
+    "color"
+  ],
+  "author": {
+    "name": "Ryan Williams",
+    "email": "runs.as.coded@gmail.com",
+    "twitter": "RunsAsCoded"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/ryan-williams/hilbert.git"
+  },
+  "dependencies": {
+    "hilbert": "1.0.0"
+  }
+}
