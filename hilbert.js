@@ -10,6 +10,7 @@ var argv = require('minimist')(process.argv.slice(2));
 var canvasSize = argv.size || 512;
 
 var debug = !!argv.debug;
+var printProgressIncrement = argv.printEvery || 10000;
 
 var xy2d = require('hilbert').xy2d;
 var d2xyz = require('hilbert').d2xyz;
@@ -94,16 +95,30 @@ function getColorForBlock(x, y) {
   return computeColorForBlock(x, y);
 }
 
+var previousNum = 0;
+var previousTime = moment();
+function printStatus(num, total) {
+  if (num % printProgressIncrement == 0) {
+    var now = moment();
+    console.log(
+          "%s:\t%d/%d (%d). rate: %d/s",
+          now.format('HH:mm:ss'),
+          num, total,
+          (100*(num/total)).toFixed(2),
+          ((num - previousNum) / (now - previousTime) * 1000).toFixed(2)
+    );
+    previousNum = num;
+    previousTime = now;
+  }
 }
 
 function getPngByBlocks() {
   var png = new FixedPngStack(canvasSize, canvasSize, 'rgb');
   var num = 0;
+  var totalBlocks = blocks*blocks;
   for (var blockX = 0; blockX < blocks; blockX++) {
     for (var blockY = 0; blockY < blocks; blockY++) {
-      if (num % 100000 == 0) {
-        console.log("%s:\t%d/%d..", moment().format('HH:mm:ss'), num, blocks*blocks);
-      }
+      printStatus(num, totalBlocks);
 
       var color = getColorForBlock(blockX, blockY);
 
@@ -124,11 +139,10 @@ function getPngByBlocks() {
 function getPngByPixels() {
   var buffer = new Buffer(canvasSize*canvasSize*3);
   var num = 0;
+  var totalPixels = canvasSize*canvasSize;
   for (var y = 0; y < canvasSize; ++y) {
     for (var x = 0; x < canvasSize; ++x) {
-      if (num % 100000 == 0) {
-        console.log("%s:\t%d/%d..", moment().format('HH:mm:ss'), num, canvasSize*canvasSize);
-      }
+      printStatus(num, totalPixels);
 
       var blockX = Math.floor(x / blockSize);
       var blockY = Math.floor(y / blockSize);
