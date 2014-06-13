@@ -51,6 +51,9 @@ var blockSize = canvasSize / blocks;
 var scalingFactor = 256*256*256/blocks/blocks;
 var scalingFactor3d = 255 / (Math.round(Math.pow(blocks, 2/3)) - 1);
 
+var memoizePositions = ('memoize' in argv) ? !!argv.memoize : (canvasSize > blocks);
+console.log("memoizing: %s", memoizePositions);
+
 function log() {
   if (debug) {
     console.log.apply(console, arguments);
@@ -78,14 +81,19 @@ function computeColorForBlock(x, y) {
 
 var blockColorCache = [];
 function getColorForBlock(x, y) {
-  if (!(x in blockColorCache)) {
-    blockColorCache[x] = [];
-  }
-  if (!(y in blockColorCache[x])) {
-    blockColorCache[x][y] = computeColorForBlock(x, y);
-  }
+  if (memoizePositions) {
+    if (!(x in blockColorCache)) {
+      blockColorCache[x] = [];
+    }
+    if (!(y in blockColorCache[x])) {
+      blockColorCache[x][y] = computeColorForBlock(x, y);
+    }
 
-  return blockColorCache[x][y];
+    return blockColorCache[x][y];
+  }
+  return computeColorForBlock(x, y);
+}
+
 }
 
 function getPngByBlocks() {
