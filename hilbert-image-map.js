@@ -5,66 +5,132 @@ var FixedPngStack = require('../node-png/build/Release/png').FixedPngStack;
 var Buffer = require('buffer').Buffer;
 var moment = require('moment');
 
-var HilbertImageMap = exports.HilbertImageMap = function(argv) {
+var Hilbert2d = require('hilbert').Hilbert2d;
+var Hilbert3d = require('hilbert').Hilbert3d;
 
-  var canvasSize = argv.size || 512;
+var HilbertImageMaps = exports.HilbertImageMaps = function(argv) {
+  function checkWhitelist(arr, whitelist) {
+    if (whitelist) {
+      return arr.map(function (i) {
+        if (!(i in whitelist)) {
+          throw new Error("Invalid " + key + ": " + i);
+        }
+        if (whitelist[arr] == 1) return i;
+        return whitelist[arr];
+      });
+    }
+    return arr;
+  }
 
-  var printProgressIncrement = argv.printEvery || 10000;
+  function parseInts(key, def, whitelist) {
+    return checkWhitelist((argv[key] || def).toString().split(',').map(parseInt), whitelist);
+  }
 
+  function parseStrings(key, def, whitelist) {
+    return checkWhitelist((argv[key] || def).split(','), whitelist);
+  }
+
+  var canvasSizes = parseInts('size', 512);
   var dryRun = !!argv['dry-run'];
+  var pngConstructionMethods = parseStrings("method", "pixels", { "blocks": 1, "pixels": 1 });
+  var blocksNums = parseInts('blocks', 8, { 1: 1, 8: 1, 64: 1, 512: 1, 4096: 1 });
 
-  var xy2d = require('hilbert').xy2d;
-  var d2xyz = require('hilbert').d2xyz;
+  var size2s = parseInts('size2', 2);
+  var order2s = parseStrings('order2', 'xy');
+  var size3s = parseInts('size3', 2);
+  var order3s = parseStrings('order3', 'xyz');
 
-  var pngConstructionMethod = argv.method || "pixels";
-  if (!(pngConstructionMethod in { "blocks": 1, "pixels": 1 })) {
-    throw new Error("Invalid method: " + pngConstructionMethod + ". Must be one of {blocks,pixels}.");
-  }
-
-  var blocks = argv.blocks || 8;
-  var acceptableBlocks = { 1: 1, 8: 1, 64: 1, 512: 1, 4096: 1 };
-  if (!(blocks in acceptableBlocks)) {
-    throw new Error("Invalid block size: " + blocks + ". Must be one of {1,8,64,512,4096}.");
-  }
-
-  var projectionNameMap = {
+  var projectionTypes = parseStrings('projection', 'scaleXYZ', {
     xyz: 'scaleXYZ',
     scaleXYZ: 'scaleXYZ',
     d: 'scaleD',
     scaleD: 'scaleD'
+  });
+
+  var maps = [];
+  canvasSizes.forEach(function (canvasSize) {
+    pngConstructionMethods.forEach(function (pngConstructionMethod) {
+      blocksNums.forEach(function (blocks) {
+        projectionTypes.forEach(function(projectionType) {
+          size2s.forEach(function (size2) {
+            order2s.forEach(function (order2) {
+              size3s.forEach(function (size3) {
+                order3s.forEach(function (order3) {
+                  maps.push(
+                        new HilbertImageMap({
+                          canvasSize: canvasSize,
+                          pngConstructionMethod: pngConstructionMethod,
+                          blocks: blocks,
+                          projectionType: projectionType,
+                          size2: size2,
+                          order2: order2,
+                          size3: size3,
+                          order3: order3,
+                          outbase: argv.outbase,
+                          outdir: argv.outdir,
+                          printEvery: argv.printEvery
+                        })
+                  );
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  this.createImages = function() {
+    maps.forEach(function(map) {
+      map.createImage();
+    });
   };
+};
 
-  var projectionType = argv.projection || 'scaleXYZ';
-  if (!projectionType in projectionNameMap) {
-    throw new Error("Invalid projection type: " + projectionType + ". Must be one of {scaleD, scaleXYZ}.");
-  }
-  projectionType = projectionNameMap[projectionType];
+var HilbertImageMap = exports.HilbertImageMap = function(opts) {
 
-  var outfileRoot = argv.outbase || "hilbert";
-  var outfileDir = argv.outdir || ".";
+  var canvasSize = opts.canvasSize;
+  var blocks = opts.blocks;
+  var projectionType = opts.projectionType;
+
+  var printProgressIncrement = opts.printEvery || 10000;
+
+  var h2 = new Hilbert2d(opts.size2, opts.order2);
+  var h3 = new Hilbert3d(opts.size3, opts.order3);
+
+  var outfileRoot = opts.outbase || "hilbert";
+  var outfileDir = opts.outdir || ".";
   if (outfileDir[outfileDir.length - 1] != '/') {
     outfileDir += '/';
   }
 
-  var filename = outfileDir + outfileRoot + '-' + blocks + '-' + canvasSize + 'x' + canvasSize + '-' + projectionType + '.png';
+  var filename = [
+    outfileDir + outfileRoot,
+    blocks,
+    canvasSize + 'x' + canvasSize,
+    projectionType,
+    opts.size2,
+    opts.order2,
+    opts.size3,
+    opts.order3
+  ].join('-') + '.png';
 
   var blockSize = canvasSize / blocks;
 
   var scalingFactor = 256*256*256/blocks/blocks;
   var scalingFactor3d = 255 / (Math.round(Math.pow(blocks, 2/3)) - 1);
 
-  var memoizePositions = ('memoize' in argv) ? !!argv.memoize : (canvasSize > blocks);
-  console.log("memoizing: %s", memoizePositions);
+  var memoizePositions = /*('memoize' in argv) ? !!argv.memoize : */(canvasSize > blocks);
 
   function computeColorForBlock(x, y) {
-    var d = xy2d(x, y);
+    var d = h2.xy2d(x, y);
 
     var color = null;
     if (projectionType == 'scaleD') {
       var scaleD = d * scalingFactor;
-      color = d2xyz(scaleD);
+      color = h3.d2xyz(scaleD);
     } else if (projectionType == 'scaleXYZ') {
-      var xyz = d2xyz(d);
+      var xyz = h3.d2xyz(d);
       color = xyz.mult(scalingFactor3d);
     } else {
       throw new Error('Unrecognized projection type: ' + projectionType);
@@ -119,7 +185,7 @@ var HilbertImageMap = exports.HilbertImageMap = function(argv) {
         for (var i = 0; i < blockSize * blockSize; i++) {
           data += String.fromCharCode.apply(String, color);
         }
-        if (!dryRun) {
+        if (!opts.dryRun) {
           var buffer = new Buffer(blockSize * blockSize * 3);
           buffer.write(data, 'binary');
           png.push(buffer, blockX * blockSize, blockY * blockSize, blockSize, blockSize);
@@ -143,7 +209,7 @@ var HilbertImageMap = exports.HilbertImageMap = function(argv) {
 
         var color = this.getColorForBlock(blockX, blockY);
 
-        if (!dryRun) {
+        if (!opts.dryRun) {
           buffer.write(String.fromCharCode.apply(String, color), 3 * (y * canvasSize + x), 3, 'binary');
         }
         num++;
@@ -156,15 +222,15 @@ var HilbertImageMap = exports.HilbertImageMap = function(argv) {
 
   this.createImage = function() {
     var png = null;
-    if (pngConstructionMethod == "blocks") {
+    if (opts.pngConstructionMethod == "blocks") {
       png = this.getPngByBlocks();
-    } else if (pngConstructionMethod == "pixels") {
+    } else if (opts.pngConstructionMethod == "pixels") {
       png = this.getPngByPixels();
     } else {
-      throw new Error("Invalid construction method: " + pngConstructionMethod);
+      throw new Error("Invalid construction method: " + opts.pngConstructionMethod);
     }
 
-    if (!dryRun) {
+    if (!opts.dryRun) {
       console.log("Writing to: %s", filename);
       fs.writeFileSync(filename, png.toString('binary'), 'binary');
     } else {

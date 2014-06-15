@@ -22,6 +22,6 @@
     "url": "http://github.com/ryan-williams/hilbert.git"
   },
   "dependencies": {
-    "hilbert": "1.0.0"
+    "hilbert": "2.0.0"
   }
 }

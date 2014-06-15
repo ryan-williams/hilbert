@@ -1,6 +1,6 @@
 
 var argv = require('minimist')(process.argv.slice(2));
 
-var HilbertImageMap = require('./hilbert-image-map').HilbertImageMap;
+var HilbertImageMaps = require('./hilbert-image-map').HilbertImageMaps;
 
-new HilbertImageMap(argv).createImage();
+new HilbertImageMaps(argv).createImages();
