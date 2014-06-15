@@ -35,9 +35,7 @@ var HilbertImageMaps = exports.HilbertImageMaps = function(argv) {
   var pngConstructionMethods = parseStrings("method", "pixels", { "blocks": 1, "pixels": 1 });
   var blocksNums = parseInts('blocks', 8, { 1: 1, 8: 1, 64: 1, 512: 1, 4096: 1 });
 
-  var size2s = parseInts('size2', 2);
   var order2s = parseStrings('order2', 'xy');
-  var size3s = parseInts('size3', 2);
   var order3s = parseStrings('order3', 'xyz');
 
   var projectionTypes = parseStrings('projection', 'scaleXYZ', {
@@ -52,27 +50,22 @@ var HilbertImageMaps = exports.HilbertImageMaps = function(argv) {
     pngConstructionMethods.forEach(function (pngConstructionMethod) {
       blocksNums.forEach(function (blocks) {
         projectionTypes.forEach(function(projectionType) {
-          size2s.forEach(function (size2) {
-            order2s.forEach(function (order2) {
-              size3s.forEach(function (size3) {
-                order3s.forEach(function (order3) {
-                  maps.push(
-                        new HilbertImageMap({
-                          canvasSize: canvasSize,
-                          pngConstructionMethod: pngConstructionMethod,
-                          blocks: blocks,
-                          projectionType: projectionType,
-                          size2: size2,
-                          order2: order2,
-                          size3: size3,
-                          order3: order3,
-                          outbase: argv.outbase,
-                          outdir: argv.outdir,
-                          printEvery: argv.printEvery
-                        })
-                  );
-                });
-              });
+          order2s.forEach(function (order2) {
+            order3s.forEach(function (order3) {
+              maps.push(
+                    new HilbertImageMap({
+                      canvasSize: canvasSize,
+                      pngConstructionMethod: pngConstructionMethod,
+                      blocks: blocks,
+                      projectionType: projectionType,
+                      dryRun: dryRun,
+                      order2: order2,
+                      order3: order3,
+                      outbase: argv.outbase,
+                      outdir: argv.outdir,
+                      printEvery: argv.printEvery
+                    })
+              );
             });
           });
         });
@@ -95,11 +88,11 @@ var HilbertImageMap = exports.HilbertImageMap = function(opts) {
 
   var printProgressIncrement = opts.printEvery || 10000;
 
-  var h2 = new Hilbert2d(opts.size2, opts.order2);
-  var h3 = new Hilbert3d(opts.size3, opts.order3);
+  var h2 = new Hilbert2d(opts.order2);
+  var h3 = new Hilbert3d(opts.order3);
 
   var outfileRoot = opts.outbase || "hilbert";
-  var outfileDir = opts.outdir || ".";
+  var outfileDir = opts.outdir || "./img";
   if (outfileDir[outfileDir.length - 1] != '/') {
     outfileDir += '/';
   }
@@ -109,9 +102,7 @@ var HilbertImageMap = exports.HilbertImageMap = function(opts) {
     blocks,
     canvasSize + 'x' + canvasSize,
     projectionType,
-    opts.size2,
     opts.order2,
-    opts.size3,
     opts.order3
   ].join('-') + '.png';
 
