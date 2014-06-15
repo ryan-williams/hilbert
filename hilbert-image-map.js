@@ -15,8 +15,8 @@ var HilbertImageMaps = exports.HilbertImageMaps = function(argv) {
         if (!(i in whitelist)) {
           throw new Error("Invalid " + key + ": " + i);
         }
-        if (whitelist[arr] == 1) return i;
-        return whitelist[arr];
+        if (whitelist[i] == 1) return i;
+        return whitelist[i];
       });
     }
     return arr;
