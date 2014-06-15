@@ -217,6 +217,10 @@ var HilbertImageMap = exports.HilbertImageMap = function(opts) {
     } else {
       console.log("Generating %s", filename);
     }
+    if (fs.existsSync(filename)) {
+      console.log("\tAlready exists!");
+      return;
+    }
     var png = null;
     if (opts.pngConstructionMethod == "blocks") {
       png = this.getPngByBlocks();
