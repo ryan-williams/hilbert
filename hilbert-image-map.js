@@ -151,11 +151,11 @@ var HilbertImageMap = exports.HilbertImageMap = function(opts) {
     if (num % printProgressIncrement == 0) {
       var now = moment();
       console.log(
-            "%s:\t%d/%d (%d). rate: %d/s",
+            "%s:\t%d/%d (%d). rate: %dk/s",
             now.format('HH:mm:ss'),
             num, total,
             (100*(num/total)).toFixed(2),
-            ((num - previousNum) / (now - previousTime) * 1000).toFixed(2)
+            Math.round((num - previousNum) / (now - previousTime))
       );
       previousNum = num;
       previousTime = now;
