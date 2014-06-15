@@ -23,7 +23,7 @@ var HilbertImageMaps = exports.HilbertImageMaps = function(argv) {
   }
 
   function parseInts(key, def, whitelist) {
-    return checkWhitelist((argv[key] || def).toString().split(',').map(parseInt), whitelist);
+    return checkWhitelist((argv[key] || def).toString().split(',').map(function(i) { return parseInt(i); }), whitelist);
   }
 
   function parseStrings(key, def, whitelist) {
