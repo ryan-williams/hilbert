@@ -74,8 +74,8 @@ var HilbertImageMaps = exports.HilbertImageMaps = function(argv) {
   });
 
   this.createImages = function() {
-    maps.forEach(function(map) {
-      map.createImage();
+    maps.forEach(function(map, idx) {
+      map.createImage(idx, maps.length);
     });
   };
 };
@@ -211,7 +211,12 @@ var HilbertImageMap = exports.HilbertImageMap = function(opts) {
     return png.encodeSync();
   };
 
-  this.createImage = function() {
+  this.createImage = function(idx, total) {
+    if (total) {
+      console.log("Generating %d/%d: %s", idx, total, filename);
+    } else {
+      console.log("Generating %s", filename);
+    }
     var png = null;
     if (opts.pngConstructionMethod == "blocks") {
       png = this.getPngByBlocks();
@@ -222,10 +227,10 @@ var HilbertImageMap = exports.HilbertImageMap = function(opts) {
     }
 
     if (!opts.dryRun) {
-      console.log("Writing to: %s", filename);
+      console.log("\tWriting to: %s", filename);
       fs.writeFileSync(filename, png.toString('binary'), 'binary');
     } else {
-      console.log("dry run, not writing");
+      console.log("\tdry run, not writing");
     }
   };
 };
