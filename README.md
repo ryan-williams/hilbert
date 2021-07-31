@@ -3,10 +3,10 @@ hilbert
 
 Generate hilbert-curve-color-picker images
 
-![](hilbert-8.png)
+![](img/hilbert-8-512x512-scaleD-xy-xzy.png)
 
-![](hilbert-64.png)
+![](img/hilbert-64-512x512-scaleD-xy-zyx.png)
 
-![](hilbert-512.png)
+![](img/hilbert-512-512x512-scaleD-xy-xzy.png)
 
 Made with [hilbert.js](https://github.com/ryan-williams/hilbert-js)
